@@ -38,9 +38,9 @@ import com.linkedin.pinot.controller.helix.core.rebalance.RebalanceSegmentStrate
 import com.linkedin.pinot.controller.helix.core.relocation.RealtimeSegmentRelocator;
 import com.linkedin.pinot.controller.helix.core.retention.RetentionManager;
 import com.linkedin.pinot.controller.validation.ValidationManager;
+import com.linkedin.pinot.core.crypt.PinotCrypterFactory;
 import com.linkedin.pinot.core.periodictask.PeriodicTask;
 import com.linkedin.pinot.core.periodictask.PeriodicTaskScheduler;
-import com.linkedin.pinot.core.crypt.PinotCrypterFactory;
 import com.linkedin.pinot.filesystem.PinotFSFactory;
 import com.yammer.metrics.core.MetricsRegistry;
 import java.io.File;
@@ -166,11 +166,9 @@ public class ControllerStarter {
 
     List<PeriodicTask> periodicTasks = new ArrayList<>();
 
+    LOGGER.info("Adding task manager to periodic task scheduler");
     _taskManager = new PinotTaskManager(_helixTaskResourceManager, _helixResourceManager, _config, _controllerMetrics);
-    if (_taskManager.getIntervalInSeconds() > 0) {
-      LOGGER.info("Adding task manager to periodic task scheduler");
-      periodicTasks.add(_taskManager);
-    }
+    periodicTasks.add(_taskManager);
 
     LOGGER.info("Adding retention manager to periodic task scheduler");
     periodicTasks.add(_retentionManager);
@@ -187,12 +185,8 @@ public class ControllerStarter {
     _realtimeSegmentsManager.start(_controllerMetrics);
     PinotLLCRealtimeSegmentManager.getInstance().start();
 
-    if (_segmentStatusChecker.getIntervalInSeconds() == -1L) {
-      LOGGER.warn("Segment status check interval is -1, status checks disabled.");
-    } else {
-      LOGGER.info("Adding segment status checker to periodic task scheduler");
-      periodicTasks.add(_segmentStatusChecker);
-    }
+    LOGGER.info("Adding segment status checker to periodic task scheduler");
+    periodicTasks.add(_segmentStatusChecker);
 
     LOGGER.info("Adding realtime segment relocation manager to periodic task scheduler");
     periodicTasks.add(_realtimeSegmentRelocator);
